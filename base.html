@@ -1,0 +1,312 @@
+# Create add-educator template
+add_educator_template = """{% extends "base.html" %}
+
+{% block title %}Add Educator{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h1>Add Educator</h1>
+        </div>
+        <div class="card-body">
+            {% if not contract_status %}
+                <div class="alert alert-warning">
+                    <strong>Contract not deployed.</strong> Please <a href="/deploy">deploy the contract</a> first.
+                </div>
+            {% else %}
+                <p class="card-text">
+                    Add educators who are authorized to add student records.
+                </p>
+                
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="admin_address" class="form-label">Admin Address</label>
+                        <input type="text" class="form-control" id="admin_address" name="admin_address" required 
+                               placeholder="0x...">
+                        <div class="form-text">The address of the contract admin</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="admin_private_key" class="form-label">Admin Private Key</label>
+                        <input type="password" class="form-control" id="admin_private_key" name="admin_private_key" required>
+                        <div class="form-text">Private key for signing the transaction</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="educator_address" class="form-label">Educator Address</label>
+                        <input type="text" class="form-control" id="educator_address" name="educator_address" required 
+                               placeholder="0x...">
+                        <div class="form-text">The Ethereum address of the educator to authorize</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Educator</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+"""
+
+# Create add-record template
+add_record_template = """{% extends "base.html" %}
+
+{% block title %}Add Student Record{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h1>Add Student Record</h1>
+        </div>
+        <div class="card-body">
+            {% if not contract_status %}
+                <div class="alert alert-warning">
+                    <strong>Contract not deployed.</strong> Please <a href="/deploy">deploy the contract</a> first.
+                </div>
+            {% else %}
+                <p class="card-text">
+                    Add a new learning record for a student.
+                </p>
+                
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="educator_address" class="form-label">Educator Address</label>
+                        <input type="text" class="form-control" id="educator_address" name="educator_address" required 
+                               placeholder="0x...">
+                        <div class="form-text">The address of the authorized educator</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="educator_private_key" class="form-label">Educator Private Key</label>
+                        <input type="password" class="form-control" id="educator_private_key" name="educator_private_key" required>
+                        <div class="form-text">Private key for signing the transaction</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="student_address" class="form-label">Student Address</label>
+                        <input type="text" class="form-control" id="student_address" name="student_address" required 
+                               placeholder="0x...">
+                        <div class="form-text">The Ethereum address of the student</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="course_id" class="form-label">Course ID</label>
+                        <input type="text" class="form-control" id="course_id" name="course_id" required
+                               placeholder="CS101">
+                    </div>
+                    <div class="mb-3">
+                        <label for="grade" class="form-label">Grade (0-100)</label>
+                        <input type="number" class="form-control" id="grade" name="grade" required
+                               min="0" max="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="activity_type" class="form-label">Activity Type</label>
+                        <select class="form-select" id="activity_type" name="activity_type" required>
+                            <option value="">Select activity type</option>
+                            <option value="Quiz">Quiz</option>
+                            <option value="Assignment">Assignment</option>
+                            <option value="Project">Project</option>
+                            <option value="Exam">Exam</option>
+                            <option value="Lab">Lab</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        <div class="form-text">Additional details about the activity</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Record</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+"""
+
+# Create view-records template
+view_records_template = """{% extends "base.html" %}
+
+{% block title %}View Student Records{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h1>View Student Records</h1>
+        </div>
+        <div class="card-body">
+            {% if not contract_status %}
+                <div class="alert alert-warning">
+                    <strong>Contract not deployed.</strong> Please <a href="/deploy">deploy the contract</a> first.
+                </div>
+            {% else %}
+                <form method="post" class="mb-4">
+                    <div class="mb-3">
+                        <label for="student_address" class="form-label">Student Address</label>
+                        <input type="text" class="form-control" id="student_address" name="student_address" required 
+                               placeholder="0x...">
+                        <div class="form-text">The Ethereum address of the student</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">View Records</button>
+                </form>
+                
+                {% if records %}
+                    <h3>Records for {{ student_address }}</h3>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Course</th>
+                                <th>Date</th>
+                                <th>Activity</th>
+                                <th>Grade</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in records %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ record.courseID }}</td>
+                                    <td>{{ record.date }}</td>
+                                    <td>{{ record.activityType }}</td>
+                                    <td>{{ record.grade }}</td>
+                                    <td>{{ record.description }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+"""
+
+# Now let's create the route handlers for the Flask app
+
+@app.route('/')
+def index():
+    contract_status = sl is not None and sl.contract is not None
+    return render_template_string(
+        index_template, 
+        contract_status=contract_status,
+        contract_address=sl.contract_address if contract_status else None,
+        blockchain_provider=sl.w3.provider.endpoint_uri if sl is not None else None
+    )
+
+@app.route('/deploy', methods=['GET', 'POST'])
+def deploy_contract():
+    if request.method == 'POST':
+        try:
+            address = request.form.get('address')
+            private_key = request.form.get('private_key')
+            
+            if not address or not private_key:
+                flash('Please provide both address and private key', 'danger')
+                return redirect(url_for('deploy_contract'))
+            
+            contract_address = sl.deploy_contract(address, private_key)
+            flash(f'Contract successfully deployed at: {contract_address}', 'success')
+            return redirect(url_for('index'))
+        except Exception as e:
+            flash(f'Error deploying contract: {str(e)}', 'danger')
+    
+    contract_status = sl is not None and sl.contract is not None
+    return render_template_string(
+        deploy_template, 
+        contract_status=contract_status,
+        contract_address=sl.contract_address if contract_status else None
+    )
+
+@app.route('/add-educator', methods=['GET', 'POST'])
+def add_educator():
+    if request.method == 'POST':
+        try:
+            admin_address = request.form.get('admin_address')
+            admin_private_key = request.form.get('admin_private_key')
+            educator_address = request.form.get('educator_address')
+            
+            if not admin_address or not admin_private_key or not educator_address:
+                flash('Please fill in all fields', 'danger')
+                return redirect(url_for('add_educator'))
+            
+            tx_receipt = sl.add_educator(admin_address, admin_private_key, educator_address)
+            flash(f'Educator {educator_address} successfully added', 'success')
+            return redirect(url_for('index'))
+        except Exception as e:
+            flash(f'Error adding educator: {str(e)}', 'danger')
+    
+    contract_status = sl is not None and sl.contract is not None
+    return render_template_string(
+        add_educator_template, 
+        contract_status=contract_status
+    )
+
+@app.route('/add-record', methods=['GET', 'POST'])
+def add_record():
+    if request.method == 'POST':
+        try:
+            educator_address = request.form.get('educator_address')
+            educator_private_key = request.form.get('educator_private_key')
+            student_address = request.form.get('student_address')
+            course_id = request.form.get('course_id')
+            grade = int(request.form.get('grade'))
+            activity_type = request.form.get('activity_type')
+            description = request.form.get('description', '')
+            
+            if not all([educator_address, educator_private_key, student_address, course_id, activity_type]):
+                flash('Please fill in all required fields', 'danger')
+                return redirect(url_for('add_record'))
+            
+            tx_receipt = sl.add_record(
+                educator_address, educator_private_key, student_address,
+                course_id, grade, activity_type, description
+            )
+            flash(f'Record successfully added for student {student_address}', 'success')
+            return redirect(url_for('view_records'))
+        except Exception as e:
+            flash(f'Error adding record: {str(e)}', 'danger')
+    
+    contract_status = sl is not None and sl.contract is not None
+    return render_template_string(
+        add_record_template, 
+        contract_status=contract_status
+    )
+
+@app.route('/view-records', methods=['GET', 'POST'])
+def view_records():
+    records = None
+    student_address = None
+    
+    if request.method == 'POST':
+        try:
+            student_address = request.form.get('student_address')
+            
+            if not student_address:
+                flash('Please provide a student address', 'danger')
+                return redirect(url_for('view_records'))
+            
+            records = sl.get_student_records(student_address)
+            if not records:
+                flash(f'No records found for student {student_address}', 'info')
+        except Exception as e:
+            flash(f'Error retrieving records: {str(e)}', 'danger')
+    
+    contract_status = sl is not None and sl.contract is not None
+    return render_template_string(
+        view_records_template, 
+        contract_status=contract_status,
+        records=records,
+        student_address=student_address
+    )
+
+# Helper function to create template files
+def create_template_files():
+    templates_dir = Path(__file__).parent / "templates"
+    templates_dir.mkdir(exist_ok=True)
+    
+    with open(templates_dir / "base.html", 'w') as f:
+        f.write(base_template)
+    
+    print("Template files created successfully")
+
+if __name__ == '__main__':
+    # Create template files
+    create_template_files()
+    
+    # Run the Flask app
+    app.run(debug=True, port=5000)
