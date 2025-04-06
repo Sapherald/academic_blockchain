@@ -136,9 +136,9 @@
         </div>
         
         <div class="tabs">
-            <button class="tab-btn active" onclick="openTab('student-tab')">Student</button>
-            <button class="tab-btn" onclick="openTab('educator-tab')">Educator</button>
-            <button class="tab-btn" onclick="openTab('admin-tab')">Admin</button>
+            <button class="tab-btn active" onclick="openTab(event, 'student-tab')">Student</button>
+            <button class="tab-btn" onclick="openTab(event, 'educator-tab')">Educator</button>
+            <button class="tab-btn" onclick="openTab(event, 'admin-tab')">Admin</button>
         </div>
         
         <div id="student-tab" class="tab-content active-content">
@@ -259,11 +259,11 @@
         let web3;
         let contract;
         let currentAccount;
-        const contractAddress = "0x2f6224fE4bD2173eE86a19535486b4aE47D83656"; // Replace after deployment
+        // IMPORTANT: Replace this with your actual deployed contract address
+        const contractAddress = "0x2f6224fE4bD2173eE86a19535486b4aE47D83656"; 
         
-        // Contract ABI - will be replaced with actual ABI after compilation
-        const contractABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"educator","type":"address"}],"name":"EducatorAuthorized","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"educator","type":"address"}],"name":"EducatorRevoked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"student","type":"address"},{"indexed":false,"internalType":"string","name":"courseID","type":"string"},{"indexed":false,"internalType":"string","name":"recordType","type":"string"},{"indexed":false,"internalType":"uint8","name":"score","type":"uint8"}],"name":"RecordAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"student","type":"address"},{"indexed":false,"internalType":"uint256","name":"recordIndex","type":"uint256"}],"name":"RecordVerified","type":"event"},{"inputs":[],"name":"admin","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorizedEducators","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"studentRecords","outputs":[{"internalType":"string","name":"courseID","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint8","name":"score","type":"uint8"},{"internalType":"string","name":"recordType","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"bool","name":"verified","type":"bool"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"_educator","type":"address"}],"name":"authorizeEducator","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_educator","type":"address"}],"name":"revokeEducator","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_student","type":"address"},{"internalType":"string","name":"_courseID","type":"string"},{"internalType":"uint8","name":"_score","type":"uint8"},{"internalType":"string","name":"_recordType","type":"string"},{"internalType":"string","name":"_description","type":"string"}],"name":"addRecord","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"_courseID","type":"string"},{"internalType":"uint8","name":"_score","type":"uint8"},{"internalType":"string","name":"_recordType","type":"string"},{"internalType":"string","name":"_description","type":"string"}],"name":"submitRecord","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_student","type":"address"},{"internalType":"uint256","name":"_recordIndex","type":"uint256"}],"name":"verifyRecord","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_student","type":"address"}],"name":"getStudentRecords","outputs":[{"components":[{"internalType":"string","name":"courseID","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint8","name":"score","type":"uint8"},{"internalType":"string","name":"recordType","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"bool","name":"verified","type":"bool"}],"internalType":"struct AcademicRecordSystem.MilestoneRecord[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"_student","type":"address"}],"name":"getRecordCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"_student","type":"address"},{"internalType":"uint256","name":"_index","type":"uint256"}],"name":"getRecord","outputs":[{"internalType":"string","name":"courseID","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint8","name":"score","type":"uint8"},{"internalType":"string","name":"recordType","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"bool","name":"verified","type":"bool"}],"stateMutability":"view","type":"function","constant":true}]                        //Placeholder for now - will need actual ABI from compilation output
-        ];
+        // Contract ABI - IMPORTANT: Make sure this matches your compiled contract
+        const contractABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"educator","type":"address"}],"name":"EducatorAuthorized","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"educator","type":"address"}],"name":"EducatorRevoked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"student","type":"address"},{"indexed":false,"internalType":"string","name":"courseID","type":"string"},{"indexed":false,"internalType":"string","name":"recordType","type":"string"},{"indexed":false,"internalType":"uint8","name":"score","type":"uint8"}],"name":"RecordAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"student","type":"address"},{"indexed":false,"internalType":"uint256","name":"recordIndex","type":"uint256"}],"name":"RecordVerified","type":"event"},{"inputs":[],"name":"admin","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorizedEducators","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"studentRecords","outputs":[{"internalType":"string","name":"courseID","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint8","name":"score","type":"uint8"},{"internalType":"string","name":"recordType","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"bool","name":"verified","type":"bool"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"_educator","type":"address"}],"name":"authorizeEducator","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_educator","type":"address"}],"name":"revokeEducator","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_student","type":"address"},{"internalType":"string","name":"_courseID","type":"string"},{"internalType":"uint8","name":"_score","type":"uint8"},{"internalType":"string","name":"_recordType","type":"string"},{"internalType":"string","name":"_description","type":"string"}],"name":"addRecord","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"_courseID","type":"string"},{"internalType":"uint8","name":"_score","type":"uint8"},{"internalType":"string","name":"_recordType","type":"string"},{"internalType":"string","name":"_description","type":"string"}],"name":"submitRecord","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_student","type":"address"},{"internalType":"uint256","name":"_recordIndex","type":"uint256"}],"name":"verifyRecord","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_student","type":"address"}],"name":"getStudentRecords","outputs":[{"components":[{"internalType":"string","name":"courseID","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint8","name":"score","type":"uint8"},{"internalType":"string","name":"recordType","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"bool","name":"verified","type":"bool"}],"internalType":"struct AcademicRecordSystem.MilestoneRecord[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"_student","type":"address"}],"name":"getRecordCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"_student","type":"address"},{"internalType":"uint256","name":"_index","type":"uint256"}],"name":"getRecord","outputs":[{"internalType":"string","name":"courseID","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint8","name":"score","type":"uint8"},{"internalType":"string","name":"recordType","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"bool","name":"verified","type":"bool"}],"stateMutability":"view","type":"function","constant":true}];
 
         // Initialize the application when the page loads
         window.addEventListener('load', async () => {
@@ -312,6 +312,11 @@
             if (web3) {
                 contract = new web3.eth.Contract(contractABI, contractAddress);
                 setupEventListeners();
+                
+                // Auto-load current user's records when app is initialized
+                if (currentAccount) {
+                    loadStudentRecords(currentAccount, 'student-records-body', 'student-records-loader');
+                }
             }
         }
 
@@ -322,6 +327,12 @@
             if (connected && currentAccount) {
                 statusElement.className = "status success";
                 statusElement.innerHTML = "Connected: " + currentAccount;
+                
+                // Check if we're on the student tab and load records automatically
+                const studentTab = document.getElementById('student-tab');
+                if (studentTab.classList.contains('active-content')) {
+                    loadStudentRecords(currentAccount, 'student-records-body', 'student-records-loader');
+                }
             } else {
                 statusElement.className = "status error";
                 statusElement.innerHTML = message || "Not connected to Ethereum network";
@@ -329,7 +340,7 @@
         }
 
         // Tab functionality
-        function openTab(tabId) {
+        function openTab(event, tabId) {
             // Hide all tab content
             const tabContents = document.getElementsByClassName('tab-content');
             for (let i = 0; i < tabContents.length; i++) {
@@ -345,6 +356,11 @@
             // Show the selected tab content and mark the button as active
             document.getElementById(tabId).classList.add('active-content');
             event.currentTarget.classList.add('active');
+            
+            // If we're switching to the student tab, automatically load records
+            if (tabId === 'student-tab' && currentAccount) {
+                loadStudentRecords(currentAccount, 'student-records-body', 'student-records-loader');
+            }
         }
 
         // Set up event listeners for forms
@@ -358,12 +374,23 @@
                 const description = document.getElementById('student-description').value;
                 
                 try {
+                    // Display a message to indicate the transaction is processing
+                    showMessage("Processing your transaction, please wait...", true);
+                    
+                    // Submit the record
                     await contract.methods.submitRecord(courseId, score, recordType, description)
                         .send({ from: currentAccount });
+                    
                     showMessage("Record submitted successfully! Waiting for educator verification.", true);
                     this.reset();
+                    
+                    // Automatically reload the records after submission
+                    setTimeout(() => {
+                        loadStudentRecords(currentAccount, 'student-records-body', 'student-records-loader');
+                    }, 2000);
                 } catch (error) {
-                    showMessage("Error submitting record: " + error.message);
+                    console.error("Transaction error:", error);
+                    showMessage("Error submitting record: " + (error.message || "Transaction failed"));
                 }
             });
             
@@ -382,12 +409,16 @@
                 const description = document.getElementById('description').value;
                 
                 try {
+                    showMessage("Processing transaction, please wait...", true);
+                    
                     await contract.methods.addRecord(studentAddress, courseId, score, recordType, description)
                         .send({ from: currentAccount });
+                    
                     showMessage("Record added successfully!", true);
                     this.reset();
                 } catch (error) {
-                    showMessage("Error adding record: " + error.message);
+                    console.error("Transaction error:", error);
+                    showMessage("Error adding record: " + (error.message || "Transaction failed"));
                 }
             });
             
@@ -398,12 +429,16 @@
                 const recordIndex = parseInt(document.getElementById('record-index').value);
                 
                 try {
+                    showMessage("Processing verification, please wait...", true);
+                    
                     await contract.methods.verifyRecord(studentAddress, recordIndex)
                         .send({ from: currentAccount });
+                    
                     showMessage("Record verified successfully!", true);
                     this.reset();
                 } catch (error) {
-                    showMessage("Error verifying record: " + error.message);
+                    console.error("Verification error:", error);
+                    showMessage("Error verifying record: " + (error.message || "Transaction failed"));
                 }
             });
             
@@ -420,12 +455,16 @@
                 const educatorAddress = document.getElementById('educator-address').value;
                 
                 try {
+                    showMessage("Processing authorization, please wait...", true);
+                    
                     await contract.methods.authorizeEducator(educatorAddress)
                         .send({ from: currentAccount });
+                    
                     showMessage("Educator authorized successfully!", true);
                     this.reset();
                 } catch (error) {
-                    showMessage("Error authorizing educator: " + error.message);
+                    console.error("Authorization error:", error);
+                    showMessage("Error authorizing educator: " + (error.message || "Transaction failed"));
                 }
             });
             
@@ -435,18 +474,39 @@
                 const educatorAddress = document.getElementById('revoke-educator-address').value;
                 
                 try {
+                    showMessage("Processing revocation, please wait...", true);
+                    
                     await contract.methods.revokeEducator(educatorAddress)
                         .send({ from: currentAccount });
+                    
                     showMessage("Educator access revoked successfully!", true);
                     this.reset();
                 } catch (error) {
-                    showMessage("Error revoking educator: " + error.message);
+                    console.error("Revocation error:", error);
+                    showMessage("Error revoking educator: " + (error.message || "Transaction failed"));
                 }
             });
+            
+            // Add event listeners for MetaMask events
+            if (window.ethereum) {
+                window.ethereum.on('chainChanged', () => {
+                    window.location.reload();
+                });
+            }
         }
 
         // Load and display a student's records
         async function loadStudentRecords(studentAddress, tableBodyId, loaderId, showIndex = false) {
+            if (!web3 || !contract) {
+                showMessage("Web3 not initialized. Please refresh the page.");
+                return;
+            }
+            
+            if (!studentAddress) {
+                showMessage("No student address provided.");
+                return;
+            }
+            
             const tableBody = document.getElementById(tableBodyId);
             const loader = document.getElementById(loaderId);
             
@@ -455,18 +515,24 @@
             tableBody.innerHTML = '';
             
             try {
+                console.log("Loading records for:", studentAddress);
+                
                 // Get record count first
                 const recordCount = await contract.methods.getRecordCount(studentAddress).call();
+                console.log("Record count:", recordCount);
                 
                 if (recordCount == 0) {
-                    tableBody.innerHTML = '<tr><td colspan="7">No records found</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="' + (showIndex ? 7 : 6) + '">No records found</td></tr>';
                     loader.style.display = 'none';
                     return;
                 }
                 
                 // Loop through each record
                 for (let i = 0; i < recordCount; i++) {
+                    console.log("Loading record", i);
+                    
                     const record = await contract.methods.getRecord(studentAddress, i).call();
+                    console.log("Record data:", record);
                     
                     // Create table row
                     const row = document.createElement('tr');
@@ -507,7 +573,9 @@
                     tableBody.appendChild(row);
                 }
             } catch (error) {
-                showMessage("Error loading records: " + error.message);
+                console.error("Error loading records:", error);
+                showMessage("Error loading records: " + (error.message || "Unknown error"));
+                tableBody.innerHTML = '<tr><td colspan="' + (showIndex ? 7 : 6) + '">Error loading records</td></tr>';
             }
             
             // Hide loader
@@ -520,7 +588,7 @@
             statusDiv.className = success ? 'status success' : 'status error';
             statusDiv.textContent = message;
             
-            // Add to all tab contents
+            // Add to active tab content
             const tabs = document.getElementsByClassName('tab-content');
             for (let i = 0; i < tabs.length; i++) {
                 if (tabs[i].classList.contains('active-content')) {
@@ -535,9 +603,12 @@
                     // Remove after 5 seconds
                     setTimeout(() => {
                         try {
-                            tabs[i].removeChild(statusDiv);
+                            if (tabs[i].contains(statusDiv)) {
+                                tabs[i].removeChild(statusDiv);
+                            }
                         } catch (e) {
                             // Element might be already removed
+                            console.log("Could not remove status message:", e);
                         }
                     }, 5000);
                     
