@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Blockchain System</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.0/dist/web3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .card {
+            background: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #f1f1f1;
+            border: none;
+            outline: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .active-content {
+            display: block;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input, select, button {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .status.error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .status.success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .records-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Academic Blockchain System</h1>
+        
+        <div id="connection-status" class="status">
+            Checking connection...
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab('student-tab')">Student</button>
+            <button class="tab-btn" onclick="openTab('educator-tab')">Educator</button>
+            <button class="tab-btn" onclick="openTab('admin-tab')">Admin</button>
+        </div>
+        
+        <div id="student-tab" class="tab-content active-content">
+            <div class="card">
+                <h2>Submit Academic Record</h2>
+                <form id="submit-record-form">
+                    <input type="text" id="student-course-id" placeholder="Course ID" required>
+                    <select id="student-record-type" required>
+                        <option value="">Select Record Type</option>
+                        <option value="Quiz">Quiz</option>
+                        <option value="Assignment">Assignment</option>
+                        <option value="Exam">Exam</option>
+                        <option value="Project">Project</option>
+                    </select>
+                    <input type="number" id="student-score" placeholder="Score (0-100)" min="0" max="100" required>
+                    <input type="text" id="student-description" placeholder="Description" required>
+                    <button type="submit">Submit Record</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2>My Academic Records</h2>
+                <button id="load-student-records">Load My Records</button>
+                <div class="loader" id="student-records-loader"></div>
+                <div class="records-container">
+                    <table id="student-records-table">
+                        <thead>
+                            <tr>
+                                <th>Course ID</th>
+                                <th>Type</th>
+                                <th>Score</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Verified</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-records-body">
+                            <!-- Records will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="educator-tab" class="tab-content">
+            <div class="card">
+                <h2>Add Student Record</h2>
+                <form id="add-record-form">
+                    <input type="text" id="student-address" placeholder="Student Ethereum Address" required>
+                    <input type="text" id="course-id" placeholder="Course ID" required>
+                    <select id="record-type" required>
+                        <option value="">Select Record Type</option>
+                        <option value="Quiz">Quiz</option>
+                        <option value="Assignment">Assignment</option>
+                        <option value="Exam">Exam</option>
+                        <option value="Project">Project</option>
+                    </select>
+                    <input type="number" id="score" placeholder="Score (0-100)" min="0" max="100" required>
+                    <input type="text" id="description" placeholder="Description" required>
+                    <button type="submit">Add Record</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2>Verify Student Record</h2>
+                <form id="verify-record-form">
+                    <input type="text" id="verify-student-address" placeholder="Student Ethereum Address" required>
+                    <input type="number" id="record-index" placeholder="Record Index" min="0" required>
+                    <button type="submit">Verify Record</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2>View Student Records</h2>
+                <form id="view-records-form">
+                    <input type="text" id="view-student-address" placeholder="Student Ethereum Address" required>
+                    <button type="submit">View Records</button>
+                </form>
+                <div class="loader" id="view-records-loader"></div>
+                <div class="records-container">
+                    <table id="view-records-table">
+                        <thead>
+                            <tr>
+                                <th>Index</th>
+                                <th>Course ID</th>
+                                <th>Type</th>
+                                <th>Score</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Verified</th>
+                            </tr>
+                        </thead>
+                        <tbody id="view-records-body">
+                            <!-- Records will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="admin-tab" class="tab-content">
+            <div class="card">
+                <h2>Manage Educators</h2>
+                <form id="authorize-educator-form">
+                    <input type="text" id="educator-address" placeholder="Educator Ethereum Address" required>
+                    <button type="submit">Authorize Educator</button>
+                </form>
+                <form id="revoke-educator-form" style="margin-top: 20px;">
+                    <input type="text" id="revoke-educator-address" placeholder="Educator Ethereum Address" required>
+                    <button type="submit">Revoke Educator</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let web3;
+        let contract;
+        let currentAccount;
+        const contractAddress = "0x2f6224fE4bD2173eE86a19535486b4aE47D83656"; // Replace after deployment
+        
+        // Contract ABI - will be replaced with actual ABI after compilation
+        const contractABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"educator","type":"address"}],"name":"EducatorAuthorized","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"educator","type":"address"}],"name":"EducatorRevoked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"student","type":"address"},{"indexed":false,"internalType":"string","name":"courseID","type":"string"},{"indexed":false,"internalType":"string","name":"recordType","type":"string"},{"indexed":false,"internalType":"uint8","name":"score","type":"uint8"}],"name":"RecordAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"student","type":"address"},{"indexed":false,"internalType":"uint256","name":"recordIndex","type":"uint256"}],"name":"RecordVerified","type":"event"},{"inputs":[],"name":"admin","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"authorizedEducators","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"studentRecords","outputs":[{"internalType":"string","name":"courseID","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint8","name":"score","type":"uint8"},{"internalType":"string","name":"recordType","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"bool","name":"verified","type":"bool"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"_educator","type":"address"}],"name":"authorizeEducator","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_educator","type":"address"}],"name":"revokeEducator","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_student","type":"address"},{"internalType":"string","name":"_courseID","type":"string"},{"internalType":"uint8","name":"_score","type":"uint8"},{"internalType":"string","name":"_recordType","type":"string"},{"internalType":"string","name":"_description","type":"string"}],"name":"addRecord","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"_courseID","type":"string"},{"internalType":"uint8","name":"_score","type":"uint8"},{"internalType":"string","name":"_recordType","type":"string"},{"internalType":"string","name":"_description","type":"string"}],"name":"submitRecord","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_student","type":"address"},{"internalType":"uint256","name":"_recordIndex","type":"uint256"}],"name":"verifyRecord","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_student","type":"address"}],"name":"getStudentRecords","outputs":[{"components":[{"internalType":"string","name":"courseID","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint8","name":"score","type":"uint8"},{"internalType":"string","name":"recordType","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"bool","name":"verified","type":"bool"}],"internalType":"struct AcademicRecordSystem.MilestoneRecord[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"_student","type":"address"}],"name":"getRecordCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function","constant":true},{"inputs":[{"internalType":"address","name":"_student","type":"address"},{"internalType":"uint256","name":"_index","type":"uint256"}],"name":"getRecord","outputs":[{"internalType":"string","name":"courseID","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint8","name":"score","type":"uint8"},{"internalType":"string","name":"recordType","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"bool","name":"verified","type":"bool"}],"stateMutability":"view","type":"function","constant":true}]                        //Placeholder for now - will need actual ABI from compilation output
+        ];
+
+        // Initialize the application when the page loads
+        window.addEventListener('load', async () => {
+            await initWeb3();
+            initApp();
+        });
+
+        // Initialize Web3
+        async function initWeb3() {
+            // Modern browsers with MetaMask or similar wallets
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    // Request account access
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const accounts = await web3.eth.getAccounts();
+                    currentAccount = accounts[0];
+                    
+                    // Listen for account changes
+                    window.ethereum.on('accountsChanged', function (accounts) {
+                        currentAccount = accounts[0];
+                        updateConnectionStatus();
+                    });
+                    
+                    updateConnectionStatus();
+                } catch (error) {
+                    console.error("User denied account access");
+                    updateConnectionStatus(false, "You need to allow MetaMask access to use this application.");
+                }
+            }
+            // Legacy browsers or without MetaMask
+            else if (window.web3) {
+                web3 = new Web3(window.web3.currentProvider);
+                const accounts = await web3.eth.getAccounts();
+                currentAccount = accounts[0];
+                updateConnectionStatus();
+            }
+            // No web3 provider
+            else {
+                updateConnectionStatus(false, "Please install MetaMask or another Ethereum wallet to use this application.");
+            }
+        }
+
+        // Initialize the application
+        function initApp() {
+            if (web3) {
+                contract = new web3.eth.Contract(contractABI, contractAddress);
+                setupEventListeners();
+            }
+        }
+
+        // Update connection status display
+        function updateConnectionStatus(connected = true, message = "") {
+            const statusElement = document.getElementById('connection-status');
+            
+            if (connected && currentAccount) {
+                statusElement.className = "status success";
+                statusElement.innerHTML = "Connected: " + currentAccount;
+            } else {
+                statusElement.className = "status error";
+                statusElement.innerHTML = message || "Not connected to Ethereum network";
+            }
+        }
+
+        // Tab functionality
+        function openTab(tabId) {
+            // Hide all tab content
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active-content');
+            }
+            
+            // Remove active class from all tab buttons
+            const tabButtons = document.getElementsByClassName('tab-btn');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            
+            // Show the selected tab content and mark the button as active
+            document.getElementById(tabId).classList.add('active-content');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Set up event listeners for forms
+        function setupEventListeners() {
+            // Student submitting a record
+            document.getElementById('submit-record-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const courseId = document.getElementById('student-course-id').value;
+                const recordType = document.getElementById('student-record-type').value;
+                const score = parseInt(document.getElementById('student-score').value);
+                const description = document.getElementById('student-description').value;
+                
+                try {
+                    await contract.methods.submitRecord(courseId, score, recordType, description)
+                        .send({ from: currentAccount });
+                    showMessage("Record submitted successfully! Waiting for educator verification.", true);
+                    this.reset();
+                } catch (error) {
+                    showMessage("Error submitting record: " + error.message);
+                }
+            });
+            
+            // Load student's own records
+            document.getElementById('load-student-records').addEventListener('click', async function() {
+                loadStudentRecords(currentAccount, 'student-records-body', 'student-records-loader');
+            });
+            
+            // Educator adding a record
+            document.getElementById('add-record-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const studentAddress = document.getElementById('student-address').value;
+                const courseId = document.getElementById('course-id').value;
+                const recordType = document.getElementById('record-type').value;
+                const score = parseInt(document.getElementById('score').value);
+                const description = document.getElementById('description').value;
+                
+                try {
+                    await contract.methods.addRecord(studentAddress, courseId, score, recordType, description)
+                        .send({ from: currentAccount });
+                    showMessage("Record added successfully!", true);
+                    this.reset();
+                } catch (error) {
+                    showMessage("Error adding record: " + error.message);
+                }
+            });
+            
+            // Educator verifying a record
+            document.getElementById('verify-record-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const studentAddress = document.getElementById('verify-student-address').value;
+                const recordIndex = parseInt(document.getElementById('record-index').value);
+                
+                try {
+                    await contract.methods.verifyRecord(studentAddress, recordIndex)
+                        .send({ from: currentAccount });
+                    showMessage("Record verified successfully!", true);
+                    this.reset();
+                } catch (error) {
+                    showMessage("Error verifying record: " + error.message);
+                }
+            });
+            
+            // View a student's records
+            document.getElementById('view-records-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const studentAddress = document.getElementById('view-student-address').value;
+                loadStudentRecords(studentAddress, 'view-records-body', 'view-records-loader', true);
+            });
+            
+            // Admin authorizing an educator
+            document.getElementById('authorize-educator-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const educatorAddress = document.getElementById('educator-address').value;
+                
+                try {
+                    await contract.methods.authorizeEducator(educatorAddress)
+                        .send({ from: currentAccount });
+                    showMessage("Educator authorized successfully!", true);
+                    this.reset();
+                } catch (error) {
+                    showMessage("Error authorizing educator: " + error.message);
+                }
+            });
+            
+            // Admin revoking an educator
+            document.getElementById('revoke-educator-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const educatorAddress = document.getElementById('revoke-educator-address').value;
+                
+                try {
+                    await contract.methods.revokeEducator(educatorAddress)
+                        .send({ from: currentAccount });
+                    showMessage("Educator access revoked successfully!", true);
+                    this.reset();
+                } catch (error) {
+                    showMessage("Error revoking educator: " + error.message);
+                }
+            });
+        }
+
+        // Load and display a student's records
+        async function loadStudentRecords(studentAddress, tableBodyId, loaderId, showIndex = false) {
+            const tableBody = document.getElementById(tableBodyId);
+            const loader = document.getElementById(loaderId);
+            
+            // Show loader
+            loader.style.display = 'block';
+            tableBody.innerHTML = '';
+            
+            try {
+                // Get record count first
+                const recordCount = await contract.methods.getRecordCount(studentAddress).call();
+                
+                if (recordCount == 0) {
+                    tableBody.innerHTML = '<tr><td colspan="7">No records found</td></tr>';
+                    loader.style.display = 'none';
+                    return;
+                }
+                
+                // Loop through each record
+                for (let i = 0; i < recordCount; i++) {
+                    const record = await contract.methods.getRecord(studentAddress, i).call();
+                    
+                    // Create table row
+                    const row = document.createElement('tr');
+                    
+                    // Add index column if needed (for educator view)
+                    if (showIndex) {
+                        const indexCell = document.createElement('td');
+                        indexCell.textContent = i;
+                        row.appendChild(indexCell);
+                    }
+                    
+                    // Add record data
+                    const courseCell = document.createElement('td');
+                    courseCell.textContent = record.courseID;
+                    row.appendChild(courseCell);
+                    
+                    const typeCell = document.createElement('td');
+                    typeCell.textContent = record.recordType;
+                    row.appendChild(typeCell);
+                    
+                    const scoreCell = document.createElement('td');
+                    scoreCell.textContent = record.score;
+                    row.appendChild(scoreCell);
+                    
+                    const descCell = document.createElement('td');
+                    descCell.textContent = record.description;
+                    row.appendChild(descCell);
+                    
+                    const dateCell = document.createElement('td');
+                    dateCell.textContent = new Date(record.timestamp * 1000).toLocaleString();
+                    row.appendChild(dateCell);
+                    
+                    const verifiedCell = document.createElement('td');
+                    verifiedCell.textContent = record.verified ? '✓' : '✗';
+                    verifiedCell.style.color = record.verified ? 'green' : 'red';
+                    row.appendChild(verifiedCell);
+                    
+                    tableBody.appendChild(row);
+                }
+            } catch (error) {
+                showMessage("Error loading records: " + error.message);
+            }
+            
+            // Hide loader
+            loader.style.display = 'none';
+        }
+
+        // Show status messages
+        function showMessage(message, success = false) {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = success ? 'status success' : 'status error';
+            statusDiv.textContent = message;
+            
+            // Add to all tab contents
+            const tabs = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabs.length; i++) {
+                if (tabs[i].classList.contains('active-content')) {
+                    // Remove any existing status messages
+                    const existingStatus = tabs[i].querySelector('.status:not(#connection-status)');
+                    if (existingStatus) {
+                        tabs[i].removeChild(existingStatus);
+                    }
+                    
+                    tabs[i].appendChild(statusDiv);
+                    
+                    // Remove after 5 seconds
+                    setTimeout(() => {
+                        try {
+                            tabs[i].removeChild(statusDiv);
+                        } catch (e) {
+                            // Element might be already removed
+                        }
+                    }, 5000);
+                    
+                    break;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
