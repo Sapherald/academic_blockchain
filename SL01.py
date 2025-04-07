@@ -8,3 +8,18 @@ from enum import Enum
 
 app = Flask(__name__)
 CORS(app)
+
+class GradeStatus(Enum):
+    EXCELLENT = "Excellent"
+    GOOD = "Good"
+    SATISFACTORY = "Satisfactory"
+    NEEDS_IMPROVEMENT = "Needs Improvement"
+    FAIL = "Fail"
+
+class ActivityType(Enum):
+    QUIZ = "Quiz"
+    ASSIGNMENT = "Assignment"
+    MIDTERM = "Midterm"
+    FINAL_EXAM = "Final Exam"
+    PROJECT = "Project"
+    LAB = "Lab"
