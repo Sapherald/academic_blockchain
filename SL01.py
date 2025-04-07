@@ -10,11 +10,11 @@ app = Flask(__name__)
 CORS(app)
 
 class GradeStatus(Enum):
-    EXCELLENT = "Excellent"
-    GOOD = "Good"
-    SATISFACTORY = "Satisfactory"
-    NEEDS_IMPROVEMENT = "Needs Improvement"
-    FAIL = "Fail"
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
+    F = "F"
 
 class ActivityType(Enum):
     QUIZ = "Quiz"
@@ -22,7 +22,6 @@ class ActivityType(Enum):
     MIDTERM = "Midterm"
     FINAL_EXAM = "Final Exam"
     PROJECT = "Project"
-    LAB = "Lab"
 
 class Blockchain:
     def __init__(self):
@@ -49,15 +48,16 @@ def add_transaction(self, data):
             'student_id': data['student_id'],
             'student_name': data.get('student_name', ''),
             'course_id': data.get('course_id', ''),
-            'activity_type': data.get('activity_type', ''),
-            'activity_name': data.get('activity_name', ''),
-            'grade': data.get('grade', 0),
-            'grade_status': data.get('grade_status', ''),
-            'max_grade': data.get('max_grade', 100),
             'instructor_name': data.get('instructor_name', ''),
-            'remarks': data.get('remarks', ''),
+            'activity_type': data.get('activity_type', ''),
+            'score': data.get('score', 0),
+            'max_score': data.get('max_score', 100),
+            'percentage': data.get('percentage', 0),
+            'grade': data.get('grade', ''),
+            'comments': data.get('comments', ''),
             'timestamp': time.time(),
-            'signature': data.get('signature', '')
+            'signature': data.get('signature', ''),
+            'record_type': data['record_type']
         }
         self.transactions.append(transaction)
         return self.last_block['index'] + 1
@@ -77,52 +77,54 @@ def hash_block(self, block):
 
     def get_student_records(self, student_id, course_id=None):
         """Get all academic records for a specific student, optionally filtered by course"""
-        records = []
+       records = []
         for block in self.chain:
             for tx in block['transactions']:
-                if tx.get('student_id') == student_id:
+                if tx.get('record_type') == 'AcademicRecord' and tx['student_id'] == student_id:
                     if course_id is None or tx.get('course_id') == course_id:
                         records.append(tx)
         return sorted(records, key=lambda x: x['timestamp'])
 
-    def get_course_records(self, course_id):
-        """Get all academic records for a specific course"""
-        records = []
-        for block in self.chain:
-            for tx in block['transactions']:
-                if tx.get('course_id') == course_id:
-                    records.append(tx)
-        return sorted(records, key=lambda x: x['timestamp'])
-
-    def calculate_student_average(self, student_id, course_id=None):
-        """Calculate the average grade for a student, optionally for a specific course"""
+    def calculate_course_average(self, student_id, course_id):
         records = self.get_student_records(student_id, course_id)
         if not records:
             return 0.0
         
         total_score = 0
-        total_weight = 0
+        total_weight = 1
         
-        for record in records:
-            grade = record.get('grade', 0)
-            max_grade = record.get('max_grade', 100)
-            # Simple weighting by activity type
-            weight = 1.0
-            if record.get('activity_type') == ActivityType.MIDTERM.value:
-                weight = 2.0
-            elif record.get('activity_type') == ActivityType.FINAL_EXAM.value:
-                weight = 3.0
+      # Assign weights based on activity type
+            if record.get('activity_type') == ActivityType.QUIZ.value:
+                weight = 0.1
+            elif record.get('activity_type') == ActivityType.ASSIGNMENT.value:
+                weight = 0.2
+            elif record.get('activity_type') == ActivityType.MIDTERM.value:
+                weight = 0.3
+            elif record.get('activity_type') == ActivityType.FINAL.value:
+                weight = 0.4
             elif record.get('activity_type') == ActivityType.PROJECT.value:
-                weight = 2.5
-                
-            normalized_grade = (grade / max_grade) * 100
-            total_score += normalized_grade * weight
+                weight = 0.3
+            
+            percentage = record.get('percentage', 0)
+            total_score += percentage * weight
             total_weight += weight
         
         if total_weight == 0:
             return 0.0
             
-        return round(total_score / total_weight, 2)
+        return round(total_score / total_weight, 1)
+
+def get_letter_grade(self, percentage):
+        if percentage >= 90:
+            return GradeLevel.A.value
+        elif percentage >= 80:
+            return GradeLevel.B.value
+        elif percentage >= 70:
+            return GradeLevel.C.value
+        elif percentage >= 60:
+            return GradeLevel.D.value
+        else:
+            return GradeLevel.F.value
 
 blockchain = Blockchain()
 blockchain.add_authorized("0xTeacher1")
@@ -130,45 +132,40 @@ blockchain.add_authorized("0xTeacher1")
 @app.route('/add_milestone', methods=['POST'])
 def add_milestone():
     data = request.get_json()
-    
-    # Validate required fields
-    required = ['student_id', 'course_id', 'activity_type', 'grade', 'instructor_name']
+    required = ['student_id', 'record_type', 'course_id', 'activity_type', 'score', 'max_score']
+
     if not all(k in data for k in required):
         return jsonify({'error': 'Missing required fields'}), 400
-    
-    # Validate instructor is authorized
+
+    if data['record_type'] != 'AcademicRecord':
+        return jsonify({'error': 'Invalid record_type for SL01'}), 400
+
     instructor = data.get('instructor_name', '')
     if not blockchain.is_authorized(instructor):
         return jsonify({'error': f"Unauthorized instructor address: {instructor}"}), 403
-    
-    # Validate activity type
-    if data.get('activity_type') not in [t.value for t in ActivityType]:
+
+    if data.get('activity_type') not in [s.value for s in ActivityType]:
         return jsonify({'error': 'Invalid activity type'}), 400
     
-    # Calculate grade status if not provided
-    if 'grade_status' not in data:
-        grade = float(data['grade'])
-        max_grade = float(data.get('max_grade', 100))
-        percentage = (grade / max_grade) * 100
-        
-        if percentage >= 90:
-            data['grade_status'] = GradeStatus.EXCELLENT.value
-        elif percentage >= 80:
-            data['grade_status'] = GradeStatus.GOOD.value
-        elif percentage >= 70:
-            data['grade_status'] = GradeStatus.SATISFACTORY.value
-        elif percentage >= 60:
-            data['grade_status'] = GradeStatus.NEEDS_IMPROVEMENT.value
-        else:
-            data['grade_status'] = GradeStatus.FAIL.value
+    # Calculate percentage
+    score = float(data.get('score', 0))
+    max_score = float(data.get('max_score', 100))
     
-    # Add transaction to blockchain
+    if max_score <= 0:
+        return jsonify({'error': 'Max score must be greater than zero'}), 400
+    
+    percentage = (score / max_score) * 100
+    data['percentage'] = round(percentage, 1)
+    
+    # Add letter grade
+    data['grade'] = blockchain.get_letter_grade(percentage)
+
     index = blockchain.add_transaction(data)
     blockchain.create_block(blockchain.last_block['hash'])
-    
     return jsonify({
         'message': f'Academic milestone added and mined into Block {index}',
-        'block_index': index
+        'percentage': data['percentage'],
+        'grade': data['grade']
     }), 201
 
 @app.route('/mine', methods=['GET'])
@@ -181,49 +178,72 @@ def mine():
 def get_chain():
     return jsonify({'chain': blockchain.chain, 'length': len(blockchain.chain)}), 200
 
-@app.route('/student_records/<student_id>', methods=['GET'])
-def student_records(student_id):
+@app.route('/student_records', methods=['GET'])
+def student_records():
+    student_id = request.args.get('student_id')
     course_id = request.args.get('course_id')
+    
+    if not student_id:
+        return jsonify({'error': 'Missing student_id parameter'}), 400
+    
     records = blockchain.get_student_records(student_id, course_id)
-    return jsonify({'student_id': student_id, 'records': records}), 200
+    
+    return jsonify({'student_id': student_id, 'course_id': course_id, 'records': records}), 200
 
-@app.route('/course_records/<course_id>', methods=['GET'])
-def course_records(course_id):
-    records = blockchain.get_course_records(course_id)
-    return jsonify({'course_id': course_id, 'records': records}), 200
-
-@app.route('/student_average/<student_id>', methods=['GET'])
-def student_average(student_id):
+@app.route('/course_average', methods=['GET'])
+def course_average():
+    student_id = request.args.get('student_id')
     course_id = request.args.get('course_id')
-    average = blockchain.calculate_student_average(student_id, course_id)
     
-    response = {
+    if not student_id or not course_id:
+        return jsonify({'error': 'Missing student_id or course_id'}), 400
+    
+    average = blockchain.calculate_course_average(student_id, course_id)
+    letter_grade = blockchain.get_letter_grade(average)
+    
+    return jsonify({
         'student_id': student_id,
-        'average': average
-    }
-    
-    if course_id:
-        response['course_id'] = course_id
-    
-    return jsonify(response), 200
+        'course_id': course_id,
+        'average': average,
+        'letter_grade': letter_grade
+    }), 200
 
 @app.route('/all_milestones', methods=['GET'])
 def all_milestones():
     milestones = []
     for block in blockchain.chain:
         for tx in block['transactions']:
-            if 'activity_type' in tx:  # Only include academic milestones
-                milestones.append(tx)
+            if tx.get('record_type') == 'AcademicRecord':
+                milestones.append({
+                    'student_id': tx['student_id'],
+                    'student_name': tx.get('student_name', ''),
+                    'course_id': tx.get('course_id', ''),
+                    'activity_type': tx.get('activity_type', ''),
+                    'score': tx.get('score', 0),
+                    'max_score': tx.get('max_score', 100),
+                    'percentage': tx.get('percentage', 0),
+                    'grade': tx.get('grade', ''),
+                    'instructor_name': tx.get('instructor_name', ''),
+                    'timestamp': tx['timestamp']
+                })
     return jsonify({'milestones': milestones}), 200
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/add_form')
+def add_form():
+    return render_template('add_milestone.html')
+
+@app.route('/view_records')
+def view_records():
+    return render_template('view_records.html')
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=5000)
     args = parser.parse_args()
 
-    print(f"✅ Academic Milestones Blockchain started at port {args.port}")
+    print(f"✅ Blockchain SL01 started at port {args.port}")
     app.run(host='0.0.0.0', port=args.port)
